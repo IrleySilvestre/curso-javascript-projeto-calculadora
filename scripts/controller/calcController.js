@@ -6,6 +6,7 @@ class CalcController {
         this._clockEl = document.querySelector('[dataTime]')
         this._currentDate
         this._operation = []
+        this._result = false
         this.inicialize()
     }
 
@@ -98,7 +99,7 @@ class CalcController {
                 break
 
             case 'porcento':
-
+                this.addOperation('%')
                 break
 
             case 'igual':
@@ -191,6 +192,33 @@ class CalcController {
         this.setLastNumberToDisplay()
     }
 
+    calcPercent() {
+        if (this.isOparator(this.getLastOparation())) {
+            this._operation.push(this._operation[0] * (this._operation[0] / 100))
+            let resultPercent = eval(this._operation.join(''))
+            this._operation = []
+            this._operation.push(resultPercent)
+            this._result = true
+            this.displayCalc = resultPercent
+        } else {
+            if (this._operation.length === 1) {
+                this._operation[0] = this._operation[0] / 100
+                this._result = true
+                this.displayCalc = this._operation
+
+            } else {
+                let resultPercent = this._operation[0] * (this._operation[2] / 100)
+                this._operation[2] = resultPercent
+                let result = eval(this._operation.join(''))
+                this._operation = []
+                this._operation.push(result)
+                this._result = true
+                this.displayCalc = result
+            }
+        }
+
+    }
+
     addOperation(value) {
         if (this._operation.length === 0) {
             if (this.isOparator(value)) {
@@ -202,19 +230,31 @@ class CalcController {
             }
         } else {
             if (isNaN(value)) {
-                if (this.isOparator(this.getLastOparation())) {
-                    this.setLastOperation(value)
+                if (value === "%") {
+                    this.calcPercent()
                 } else {
-                    this.pushOperation(value)
+
+                    if (this.isOparator(this.getLastOparation())) {
+                        this.setLastOperation(value)
+                    } else {
+                        this.pushOperation(value)
+                    }
                 }
+
             } else {
                 if (isNaN(this.getLastOparation())) {
                     this.pushOperation(value)
                     this.setLastNumberToDisplay()
                 } else {
-                    let newValue = this.getLastOparation().toString() + value.toString()
-                    this.setLastOperation(parseInt(newValue))
-                    this.setLastNumberToDisplay()
+                    if (this._result) {
+                        this.setLastOperation(parseInt(value))
+                        this.setLastNumberToDisplay()
+                        this._result = false
+                    } else {
+                        let newValue = this.getLastOparation().toString() + value.toString()
+                        this.setLastOperation(parseInt(newValue))
+                        this.setLastNumberToDisplay()
+                    }
                 }
             }
         }
