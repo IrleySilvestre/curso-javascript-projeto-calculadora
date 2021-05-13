@@ -103,11 +103,11 @@ class CalcController {
                 break
 
             case 'igual':
-
+                this.addOperation('=')
                 break
 
             case 'ponto':
-
+                this.addDot()
                 break
 
             case '0':
@@ -143,7 +143,7 @@ class CalcController {
                 this.displayCalc = 0
             } else {
                 let newTemp = temp.slice(0, temp.length - 1)
-                this.setLastOperation(parseInt(newTemp))
+                this.setLastOperation(parseFloat(newTemp))
                 this.setLastNumberToDisplay()
             }
         } else {
@@ -184,18 +184,31 @@ class CalcController {
 
     }
 
+    aroundNumber(value){
+        let resultString = value.toString()
+        console.log(resultString.indexOf('.'))
+        if (resultString.indexOf('.') > 0 && resultString.length > 11){
+            console.log( resultString)
+            let result = value.toFixed(9)
+            return result
+        }else {
+            return value
+        }
+    }
+
     calc() {
         let last = this._operation.pop()
-        let result = eval(this._operation.join(''))
+        let result = this.aroundNumber(eval(this._operation.join('')))
         this._operation = []
         this._operation.push(result, last)
         this.setLastNumberToDisplay()
+
     }
 
     calcPercent() {
         if (this.isOparator(this.getLastOparation())) {
             this._operation.push(this._operation[0] * (this._operation[0] / 100))
-            let resultPercent = eval(this._operation.join(''))
+            let resultPercent = this.aroundNumber( eval(this._operation.join('')))
             this._operation = []
             this._operation.push(resultPercent)
             this._result = true
@@ -209,7 +222,7 @@ class CalcController {
             } else {
                 let resultPercent = this._operation[0] * (this._operation[2] / 100)
                 this._operation[2] = resultPercent
-                let result = eval(this._operation.join(''))
+                let result = this.aroundNumber( eval(this._operation.join('')))
                 this._operation = []
                 this._operation.push(result)
                 this._result = true
@@ -217,6 +230,48 @@ class CalcController {
             }
         }
 
+    }
+
+    calcEqual() {
+        if (this._operation.length === 1) {
+            this._result = true
+        }
+        if (isNaN(this.getLastOparation())) {
+            this._operation.push(this._operation[0])
+            this._result = true
+            let resulCalc = this.aroundNumber( eval(this._operation.join('')))
+            this.displayCalc = resulCalc
+            this._operation = []
+            this._operation[0] = resulCalc
+        }
+        if (this._operation.length === 3) {
+            this._result = true
+            let resulCalc = this.aroundNumber( eval(this._operation.join('')))
+            this.displayCalc = resulCalc
+            this._operation = []
+            this._operation[0] = resulCalc
+
+        }
+
+    }
+
+    addDot(value) {
+        let lestOperation = this.getLastOparation()
+        if (typeof (lestOperation) === 'string'){
+            if ( (lestOperation.indexOf('.'))){
+                return
+            }
+        }
+        if (this.isOparator(lestOperation) || !lestOperation) {
+            this.pushOperation('0.')
+        } else {
+            if (value) {
+                this.setLastOperation(this.getLastOparation() + value.toString())
+            } else {
+                this.setLastOperation(lestOperation.toString() + '.')
+            }
+        }
+        console.log(this._operation)
     }
 
     addOperation(value) {
@@ -232,28 +287,34 @@ class CalcController {
             if (isNaN(value)) {
                 if (value === "%") {
                     this.calcPercent()
+                } else if ((value === "=")) {
+                    this.calcEqual()
                 } else {
-
                     if (this.isOparator(this.getLastOparation())) {
                         this.setLastOperation(value)
                     } else {
                         this.pushOperation(value)
                     }
                 }
-
             } else {
                 if (isNaN(this.getLastOparation())) {
                     this.pushOperation(value)
                     this.setLastNumberToDisplay()
                 } else {
-                    if (this._result) {
-                        this.setLastOperation(parseInt(value))
-                        this.setLastNumberToDisplay()
-                        this._result = false
+                    if (typeof(this.getLastOparation()) === String && this.isOparator(this.getLastOparation())) {
+                        console.log('achei um ponto')
+                        this.addDot(value)
+
                     } else {
-                        let newValue = this.getLastOparation().toString() + value.toString()
-                        this.setLastOperation(parseInt(newValue))
-                        this.setLastNumberToDisplay()
+                        if (this._result) {
+                            this.setLastOperation(parseFloat(value))
+                            this.setLastNumberToDisplay()
+                            this._result = false
+                        } else {
+                            let newValue = this.getLastOparation().toString() + value.toString()
+                            this.setLastOperation(newValue)
+                            this.setLastNumberToDisplay()
+                        }
                     }
                 }
             }
